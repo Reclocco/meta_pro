@@ -10,6 +10,7 @@ best = [0]
 start_pos = []
 my_map = []
 c = 5
+choices = [[1, 2, 3], [0, 2, 3], [0, 1, 3], [0, 1, 2], [0, 1, 2, 3]]
 
 
 def nums(n):
@@ -149,24 +150,24 @@ def walk(temp):
     global start_pos
     global c
 
-    curr_pos = start_pos[::]
-    walked = []
+    for i in range(400):
+        curr_pos = start_pos[::]
+        walked = []
+        x = perturb()
 
-    x = perturb()
+        for idx in range(len(x)):
+            take_step(x, walked, curr_pos, idx)
+            if my_map[curr_pos[0]][curr_pos[1]] == 8:
+                # print("FINISHED")
 
-    for idx in range(len(x)):
-        take_step(x, walked, curr_pos, idx)
-        if my_map[curr_pos[0]][curr_pos[1]] == 8:
-            # print("FINISHED")
+                if len(x) > len(walked):
+                    eprint("found shorter:", len(walked))
 
-            if len(x) > len(walked):
-                eprint("found shorter:", len(walked))
+                x = walked[::]
+                if len(x) < len(best):
+                    best = x[::]
 
-            x = walked[::]
-            if len(x) < len(best):
-                best = x[::]
-
-            return
+                return
 
     n_idx = len(x)
     walked = x[::]
@@ -185,7 +186,7 @@ def walk(temp):
 
             # print(p)
             if random.random() <= p:
-                eprint(len(x), len(walked), temp, p, c * (len(walked) - len(x)))
+                eprint("len x:", len(x), "len walked:", len(walked), "temp:", temp, "prob:", p)
                 x = walked[::]
 
             return
@@ -203,7 +204,7 @@ def search_lab():
     x = from_char(my_map.pop(m))
     best = x[::]
     start_pos = wheres_waldo()
-    temp = time**2
+    temp = time**2 * 3
     iters = 0
 
     eprint('1st path: ', x)
@@ -211,7 +212,7 @@ def search_lab():
 
     t_start = perf_counter()
     while time > perf_counter() - t_start:
-        temp = temp * 0.999
+        temp = temp * 0.99
 
         walk(temp)
 
@@ -224,10 +225,22 @@ def search_lab():
 
 def perturb():
     global x
+    global choices
     copied = copy.deepcopy(x)
-    for i in range(5):
+    for i in range(int(len(copied) * 0.15)):
         idx = whole_rand(len(copied) - 1)
-        copied[idx] = whole_rand(3)
+        try:
+            if copied[idx-1] == 0:
+                copied[idx] = random.choice(choices[1])
+            elif copied[idx - 1] == 1:
+                copied[idx] = random.choice(choices[0])
+            elif copied[idx - 1] == 2:
+                copied[idx] = random.choice(choices[3])
+            elif copied[idx - 1] == 3:
+                copied[idx] = random.choice(choices[2])
+
+        except IndexError:
+            copied[idx] = random.choice(choices[4])
 
     return copied
 
